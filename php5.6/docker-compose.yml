@@ -1,0 +1,46 @@
+version: "3.5"
+services:
+
+  php56_apache:
+    build:
+      context: "./"
+      dockerfile: "./builds/apache/Dockerfile"
+    container_name: "php56_apache"
+    labels:
+      - "traefik.enable=true"                                 # Enable Traefik listener for this service
+      - "traefik.backend=php56_apache"                        # Traefik backend service name
+      - "traefik.internal.frontend.rule=Host:php56.localhost" # Traefik hostname rule
+      - "traefik.port=80"                                     # Traefik front service port
+      - "traefik.docker.network=traefik_webgateway"           # Traefik external network,
+                                                              # required if you have multiple networks for one service
+    volumes:
+      - ".:/usr/local/apache2/htdocs/"
+    networks:
+      - "webgateway"                                          # Apache service is exposed
+      - "backend"                                             # Backend is not exposed,
+                                                              # but needed to isolate the apache and php communication
+
+  php56_php:
+    build:
+      context: "./"
+      dockerfile: "./builds/php/Dockerfile"
+    container_name: "php56_php"
+    volumes:
+      - ".:/usr/local/apache2/htdocs/"
+    depends_on:
+      - "php56_apache"
+    networks:
+      - "backend"                                             # Backend is not exposed,
+                                                              # but needed to isolate the apache and php communication
+
+networks:
+  backend:
+    driver: "bridge"
+    name: "php56_backend"                                     # Backend network for this services
+  webgateway:
+    external:
+      name: "traefik_webgateway"                              # External network for exposed service
+
+# Forbidden
+# You don't have permission to access / on this server.
+# docker exec -ti php56_php chmod 777 -R /usr/local/apache2/htdocs/

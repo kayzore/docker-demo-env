@@ -1,0 +1,49 @@
+version: "3.5"
+services:
+
+  portainer:
+    image: "portainer/portainer:latest"
+    container_name: "portainer"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"         # Required by portainer configuration
+      - "data:/data"                                        # Save data into docker volume
+    labels:
+      - "traefik.enable=true"                               # Enable Traefik listener for this service
+      - "traefik.backend=portainer"                         # Traefik backend service name
+      - "traefik.frontend.rule=Host:portainer.localhost"    # Traefik hostname rule
+      - "traefik.port=9000"                                 # Traefik front service port
+    restart: "always"                                       # Not required
+    privileged: true
+    depends_on:
+      - "traefik"
+    networks:
+      - "traefik_webgateway"
+
+  traefik:
+    image: "traefik:latest"
+    container_name: "traefik"
+    command: "--api --docker --logLevel=DEBUG --docker.exposedByDefault=false --docker.domain=localhost"    # Override Traefik configuration file
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=traefik"
+      - "traefik.frontend.rule=Host:traefik.localhost"
+      - "traefik.port=8080"
+    ports:
+      - "80:80"                                                                                             # Traefik required to expose this port
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"                                                         # Required by traefik configuration
+    restart: "always"
+    networks:
+      - "webgateway"
+
+volumes:
+  data:
+    name: "portainer_data"
+
+networks:
+  traefik_webgateway:
+    external:
+      name: "traefik_webgateway"
+  webgateway:
+    driver: "bridge"
+    name: "traefik_webgateway"
