@@ -40,5 +40,3 @@ networks:
   webgateway:
     external:
       name: "traefik_webgateway"                              # External network for exposed service
-
-# docker exec -ti php72_php chmod 777 -R /usr/local/apache2/htdocs/

@@ -40,7 +40,3 @@ networks:
   webgateway:
     external:
       name: "traefik_webgateway"                              # External network for exposed service
-
-# Forbidden
-# You don't have permission to access / on this server.
-# docker exec -ti php56_php chmod 777 -R /usr/local/apache2/htdocs/
